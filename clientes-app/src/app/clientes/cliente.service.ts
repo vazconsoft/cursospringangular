@@ -5,7 +5,7 @@ import {Cliente} from './cliente';
 import {Observable,throwError} from 'rxjs';
 import { of } from 'rxjs';
 import { HttpClient, HttpHeaders} from '@angular/common/http';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { Router, ActivatedRoute } from '@angular/router';
 
@@ -20,18 +20,29 @@ export class ClienteService {
 
   constructor(private http: HttpClient, private router: Router ) { }
 
-  getClientes(): Observable<Cliente[]>{
-    return this.http.get<Cliente[]>(this.urlEndPoint).pipe(
-        map(response => {
-          let clientes = response as Cliente[];
-          return clientes.map(cliente => {
+  getClientes(page: number): Observable<any>{
+    return this.http.get<Cliente[]>(this.urlEndPoint+ '/page/' + page).pipe(
+        tap((response: any) =>{
+          console.log('ClienteService: tap1');
+          (response.content as Cliente[]).forEach( cliente => {
+            console.log(cliente.nombre);
+          });
+        }),
+
+        map((response: any) => {
+          //let clientes = response as Cliente[];
+          (response.content as Cliente[]).map(cliente => {
               cliente.nombre = cliente.nombre.toUpperCase();
-              //let datePipe = new DatePipe('es-MX');
-              //cliente.createAt = datePipe.transform(cliente.createAt, 'EEEE dd/MM/yyyy');
               return cliente;
           });
-        }
-      )
+          return response;
+        }),
+        tap( response =>{
+          console.log('ClienteService: tap2');
+          (response.content as Cliente[]).forEach( cliente => {
+            console.log(cliente.nombre);
+          });
+        })
     );
   }
 
