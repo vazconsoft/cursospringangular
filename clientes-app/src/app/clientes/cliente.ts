@@ -7,5 +7,5 @@ export class Cliente {
   apellido: string;
   createAt: string;
   email: string;
-
+  foto: string;
 }
