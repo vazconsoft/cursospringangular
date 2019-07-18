@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { formatDate, DatePipe} from '@angular/common'
-//import {CLIENTES} from './cliente.json';
 import {Cliente} from './cliente';
 import {Observable,throwError} from 'rxjs';
 import { of } from 'rxjs';
@@ -9,6 +8,8 @@ import { map, catchError, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ModalService } from './detalle/modal.service';
+import { AuthService } from '../usuarios/auth.service';
+import { Region } from './region';
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +20,43 @@ export class ClienteService {
 
   private httpHeaders = new HttpHeaders({'Content-type':'application/json'})
 
-  constructor(private http: HttpClient, private router: Router ) { }
+  constructor(private http: HttpClient,
+              private router: Router,
+              private authService: AuthService) { }
+
+
+  private agregarAuthorizationHeader() {
+    let token = this.authService.token;
+      if (token != null) {
+        return this.httpHeaders.append('Authorization', 'Bearer ' + token);
+        }
+          return this.httpHeaders;
+      }
+
+  private isNoAutorizado(e): boolean {
+    if (e.status == 401) {
+      if (this.authService.isAuthenticated()) {
+        this.authService.logout();
+      }
+      this.router.navigate(['/login']);
+      return true;
+    }
+    if (e.status == 403) {
+      Swal.fire('Acceso denegado', `Hola ${this.authService.usuario.username} no tienes acceso a este recurso!`, 'warning');
+      this.router.navigate(['/clientes']);
+      return true;
+    }
+    return false;
+  }
+
+  getRegiones(): Observable<Region[]> {
+    return this.http.get<Region[]>(this.urlEndPoint + '/regiones', { headers: this.agregarAuthorizationHeader() }).pipe(
+      catchError(e => {
+        this.isNoAutorizado(e);
+        return throwError(e);
+      })
+    );
+  }
 
   getClientes(page: number): Observable<any>{
     return this.http.get<Cliente[]>(this.urlEndPoint+ '/page/' + page).pipe(
@@ -47,8 +84,8 @@ export class ClienteService {
     );
   }
 
-  create(cliente: Cliente): Observable<any>{
-      return this.http.post<any>(this.urlEndPoint, cliente, {headers: this.httpHeaders}).pipe(
+  create(cliente: Cliente): Observable<Cliente>{
+      return this.http.post<Cliente>(this.urlEndPoint, cliente, {headers: this.httpHeaders}).pipe(
         catchError(e => {
             if(e.status==400){
               return throwError(e);
@@ -76,8 +113,8 @@ export class ClienteService {
     );
   }
 
-  update(cliente: Cliente): Observable<Cliente>{
-    return this.http.put<Cliente>(`${this.urlEndPoint}/${cliente.id}`,cliente,{headers: this.httpHeaders}).pipe(
+  update(cliente: Cliente): Observable<any>{
+    return this.http.put<any>(`${this.urlEndPoint}/${cliente.id}`,cliente,{headers: this.httpHeaders}).pipe(
       catchError(e => {
           if(e.status==400){
             return throwError(e);
@@ -92,6 +129,11 @@ export class ClienteService {
   delete (id: number): Observable<Cliente>{
     return this.http.delete<Cliente>(`${this.urlEndPoint}/${id}`,{headers: this.httpHeaders}).pipe(
       catchError(e => {
+
+          if (this.isNoAutorizado(e)) {
+            return throwError(e);
+          }
+
           console.error(e.error.mensaje);
           Swal.fire(e.error.mensaje, e.error.error,'error');
           return throwError(e);
@@ -108,14 +150,11 @@ export class ClienteService {
     const req = new HttpRequest('POST', `${this.urlEndPoint}/upload/`,formData, {
       reportProgress: true
     });
-    return this.http.request(req);
-//    return this.http.request(req).pipe(
-//      map((response:any) => response.cliente as Cliente),
-//      catchError(e => {
-//          console.error(e.error.mensaje);
-//          Swal.fire(e.error.mensaje, e.error.error,'error');
-//          return throwError(e);
-//      })
-//    );
+    return this.http.request(req).pipe(
+    catchError(e => {
+        this.isNoAutorizado(e);
+        return throwError(e);
+      })
+      );
   }
 }

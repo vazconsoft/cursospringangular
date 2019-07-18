@@ -5,11 +5,12 @@ import Swal from 'sweetalert2';
 import { map, catchError, tap } from 'rxjs/operators';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ModalService } from './detalle/modal.service';
+import { AuthService } from '../usuarios/auth.service';
+
 
 @Component({
   selector: 'app-clientes',
-  templateUrl: './clientes.component.html',
-  styleUrls: ['./clientes.component.css']
+  templateUrl: './clientes.component.html'
 })
 export class ClientesComponent implements OnInit {
 
@@ -52,7 +53,6 @@ export class ClientesComponent implements OnInit {
 }
 
   delete(cliente: Cliente): void{
-
     const swalWithBootstrapButtons = Swal.mixin({
       customClass: {
         confirmButton: 'btn btn-success',
@@ -72,14 +72,13 @@ export class ClientesComponent implements OnInit {
     }).then((result) => {
       if (result.value) {
         this.clienteService.delete(cliente.id).subscribe(
-          response => {
+          () => {
             this.clientes = this.clientes.filter(cli => cli!==cliente)
             swalWithBootstrapButtons.fire(
               'Cliente Eliminado!',
               `Cliente ${cliente.nombre} ${cliente.apellido} elimnidado con exito`,
               'success'
-            )
-          }
+            )}
         )
 
       } else if (

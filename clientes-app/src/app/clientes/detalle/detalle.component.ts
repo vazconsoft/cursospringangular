@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
 import { HttpEventType } from '@angular/common/http';
 import { ModalService } from './modal.service';
+import { AuthService } from '../../usuarios/auth.service';
 
   @Component({
     selector: 'detalle-cliente',
@@ -19,7 +20,10 @@ import { ModalService } from './modal.service';
     private fotoSeleccionada:File;
     private progreso:number=0;
 
-    constructor(private clienteService: ClienteService, private activatedRoute: ActivatedRoute,private modalService: ModalService) { }
+    constructor(private clienteService: ClienteService,
+                private authService: AuthService,
+                private activatedRoute: ActivatedRoute,
+                private modalService: ModalService) { }
 
     ngOnInit() {
 //      this.activatedRoute.paramMap.subscribe( params =>{

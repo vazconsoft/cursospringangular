@@ -29,7 +29,6 @@
               "node_modules/sweetalert2/dist/sweetalert2.min.css"
             ],
             "scripts": [
-
             ]
           },
           "configurations": {
@@ -88,9 +87,12 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.css"
+              "src/styles.css",
+
             ],
-            "scripts": []
+            "scripts": [
+              
+            ]
           }
         },
         "lint": {

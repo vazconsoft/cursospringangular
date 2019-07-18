@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Cliente} from './cliente';
 import { ClienteService} from './cliente.service';
 import { Router, ActivatedRoute } from '@angular/router';
-import swal from 'sweetalert2';
+import Swal from 'sweetalert2';
+import { Region } from './region';
 //tester
 @Component({
   selector: 'app-form',
@@ -11,7 +12,8 @@ import swal from 'sweetalert2';
 })
 export class FormComponent implements OnInit {
 
-  private cliente: Cliente = new Cliente()
+  private cliente: Cliente = new Cliente();
+  regiones: Region[];
   private titulo:String = "Crear cliente";
   private errores:string[];
 
@@ -20,46 +22,55 @@ export class FormComponent implements OnInit {
   private activatedRoute: ActivatedRoute) { }
 
   ngOnInit() {
-    this.cargarCliente()
+    this.activatedRoute.paramMap.subscribe(params => {
+      let id = +params.get('id');
+      if (id) {
+        this.clienteService.getCliente(id).subscribe((cliente) => this.cliente = cliente);
+      }
+    });
+    this.clienteService.getRegiones().subscribe(regiones => this.regiones = regiones);
   }
 
-  cargarCliente():void{
-    this.activatedRoute.params.subscribe(params => {
-      let id = params['id']
-      if(id)
-      {
-          this.clienteService.getCliente(id).subscribe((cliente) => this.cliente = cliente)
-      }
-    })
-  }
+//  cargarCliente():void{
+//    this.activatedRoute.params.subscribe(params => {
+//      let id = params['id']
+//      if(id)
+//      {
+//          this.clienteService.getCliente(id).subscribe((cliente) => this.cliente = cliente)
+//      }
+//    })
+//  }
 
   create(): void{
+    console.log(this.cliente);
     this.clienteService.create(this.cliente)
-    .subscribe(json => {
-        this.router.navigate(['/clientes'])
-        swal.fire('Nuevo cliente',`${json.mensaje} : ${json.cliente.nombre} creado con exito`,'success')
-      },
-      err =>{
-          this.errores= err.error.errors as string[];
-          console.error('Código del error desde el backend' + err.error.status);
+      .subscribe(
+        cliente => {
+          this.router.navigate(['/clientes']);
+          Swal.fire('Nuevo cliente', `El cliente ${cliente.nombre} ha sido creado con Exito`, 'success');
+        },
+        err => {
+          this.errores = err.error.errors as string[];
+          console.error('CĂłdigo del error desde el backend: ' + err.status);
           console.error(err.error.errors);
-      }
-    );
+        }
+      );
   }
 
   update():void{
+    console.log(this.cliente);
     this.clienteService.update(this.cliente)
-    .subscribe( cliente => {
-      this.router.navigate(['/clientes'])
-      swal.fire('Cliente Actualizado',`Cliente ${this.cliente.nombre} actualizado con exito`,'success')
-    },
-    err =>{
-        this.errores= err.error.errors as string[];
-        console.error('Código del error desde el backend' + err.error.status);
-        console.error(err.error.errors);
-    }
-
-  );
+      .subscribe(
+        json => {
+          this.router.navigate(['/clientes']);
+          Swal.fire('Cliente Actualizado', `${json.mensaje}: ${json.cliente.nombre}`, 'success');
+        },
+        err => {
+          this.errores = err.error.errors as string[];
+          console.error('CĂłdigo del error desde el backend: ' + err.status);
+          console.error(err.error.errors);
+        }
+      )
   }
 
 }
