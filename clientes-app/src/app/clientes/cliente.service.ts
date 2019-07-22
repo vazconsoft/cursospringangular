@@ -24,6 +24,10 @@ export class ClienteService {
               private router: Router,
               private authService: AuthService) { }
 
+  //getRegiones(): Observable<Region[]>{
+
+    //  return this.http.get<Region[]>(this.urlEndPoint + '/regiones');
+  //}
 
   private agregarAuthorizationHeader() {
     let token = this.authService.token;
